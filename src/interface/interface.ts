@@ -1,4 +1,4 @@
-export interface Products {
+export interface ProductsInterface {
     id: string;
     image_url: string;
     description: string;
@@ -6,7 +6,7 @@ export interface Products {
     title: string;
 }
 
-export interface Reviews {
+export interface ReviewsItem {
     id: string;
     text: string;
 }

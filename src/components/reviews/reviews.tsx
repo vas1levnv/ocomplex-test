@@ -1,32 +1,34 @@
 'use client'
 import React, {useEffect, useState} from 'react';
-import {Reviews} from "@/interface/interface";
+import {ReviewsItem} from "@/interface/interface";
+import useFetchData from "@/hooks/useFetchData";
+import ReviewsService from "@/components/API/ReviewsService";
 
 const Reviews = () => {
-    const [reviews, setReviews] = useState<Reviews[]>([]);
+    const [reviews, setReviews] = useState<ReviewsItem[]>([]);
 
-    const fetchData = async () => {
-        try {
-            const res = await fetch('http://o-complex.com:1337/reviews');
-            const data = await res.json();
-            setReviews(data);
-        } catch (e) {
-            console.error(e);
-        }
-    };
+    const [isLoading, error, fetchReviews] = useFetchData(async () => {
+        const data = await ReviewsService.fetchReview()
+        setReviews(data);
+    });
 
     useEffect(() => {
-        fetchData();
+        fetchReviews();
     }, []);
 
     return (
         <div className="max-w-5xl mx-auto md:mt-28 mt-24">
             <div className="grid md:grid-cols-2 gap-4">
-                {reviews.map((review, index) => (
-                    <div key={index}
-                         className="bg-gray rounded-2xl p-2 text-black"
-                         dangerouslySetInnerHTML={{__html: review.text}}></div>))}
+                {reviews ?
+                    reviews.map((review, index) => (
+                        <div key={index}
+                             className="bg-gray rounded-2xl p-2 text-black"
+                             dangerouslySetInnerHTML={{__html: review.text}}></div>)) :
+                    <div>Отзывов пока нет</div>
+                }
             </div>
+            {isLoading && <div>Идет загрузка отзывов...</div>}
+            {error && <div>Ошибка {error.message}</div>}
         </div>
     );
 };

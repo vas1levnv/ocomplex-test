@@ -1,35 +1,27 @@
 'use client'
 import React, {useEffect, useState} from 'react';
 import ProductsItem from "@/components/products/productsItem/productsItem";
-import {Products} from "@/interface/interface";
+import {ProductsInterface} from "@/interface/interface";
+import ProductsService from "@/components/API/ProductsReviews";
+import useFetchData from "@/hooks/useFetchData";
 
 const Products = () => {
-    const [products, setProducts] = useState<Products[]>([]);
+    const [products, setProducts] = useState<ProductsInterface[]>([]);
     const [totalPages, setTotalPages] = useState<number>(0);
     const [amount, setAmount] = useState<number>(18);
     const [page, setPage] = useState<number>(1);
     const observerRef = React.useRef<HTMLDivElement>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isLoading, error, fetchProducts] = useFetchData(async () => {
+        const data = await ProductsService.fetchProductsList(page, amount);
+        setProducts([...products, ...data.products]);
+        setPage(page + 1);
+        setTotalPages(Math.ceil(data.total / amount));
+    });
 
     useEffect(() => {
-        fetchData();
+        fetchProducts();
     }, []);
 
-    const fetchData = async () => {
-        try {
-            setIsLoading(true);
-            const res = await fetch(`http://o-complex.com:1337/products?page=${page}&page_size=${amount}`);
-            const data = await res.json();
-            setProducts([...products, ...data.products]);
-            setPage(page + 1);
-            setTotalPages(Math.ceil(data.total / amount));
-            console.log(totalPages, page)
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     let options = {
         root: null,
@@ -39,8 +31,8 @@ const Products = () => {
 
     let callback = (entries: any) => {
         entries.forEach((entry: any) => {
-            if (entry.isIntersecting && page <= totalPages) {
-                fetchData()
+            if (entry.isIntersecting && page <= totalPages && !error) {
+                fetchProducts();
             }
         });
     };
@@ -54,16 +46,14 @@ const Products = () => {
     }, [observerRef, options])
 
     return (
-        <div className="max-w-5xl mx-auto">
+        <div className="mt-24 max-w-5xl mx-auto">
             <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-4">
                 {products.map((product) => (
                     <ProductsItem key={product.id} product={product}/>
                 ))}
             </div>
-            {isLoading ?
-                <div className="my-2">Идет загрузка товаров...</div> :
-                false
-            }
+            {isLoading && <div className="my-2">Идет загрузка товаров...</div>}
+            {error && <div>Ошибка {error.message}</div>}
             <div className="h-14" ref={observerRef}></div>
         </div>
     );

@@ -1,8 +1,8 @@
 import React, {useState} from 'react';
-import {Products} from "@/interface/interface";
+import {ProductsInterface} from "@/interface/interface";
 
 interface Props {
-    product: Products;
+    product: ProductsInterface;
 }
 
 const ProductsItem = (props: Props) => {
